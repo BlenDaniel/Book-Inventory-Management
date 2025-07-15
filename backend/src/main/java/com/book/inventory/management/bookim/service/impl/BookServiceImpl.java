@@ -99,7 +99,7 @@ public class BookServiceImpl implements BookService {
     public List<BookDto> search(String query) {
         log.info("Searching books with query: {}", query);
         
-        List<Book> books = bookRepository.searchBooks(query);
+        List<Book> books = bookRepository.searchByTitleOrAuthor(query);
         
         return books.stream()
             .map(booksMapper::toDto)
