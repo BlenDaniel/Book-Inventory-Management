@@ -9,8 +9,12 @@ import lombok.Setter;
 @Setter
 @AllArgsConstructor
 @NoArgsConstructor
-public class UserUpdateRequest {
+public class BookUpdateRequest {
     private String id;
-    private String email;
-    private String bookId;
-}
+    private String title;
+    private String author;
+    private String isbn;
+    private int publishedYear;
+    private String genre;
+    private double price;
+} 

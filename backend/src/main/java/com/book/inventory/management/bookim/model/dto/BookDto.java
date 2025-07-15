@@ -17,5 +17,4 @@ public class BookDto {
     private int publishedYear;
     private String genre;
     private double price;
-
 }

@@ -13,21 +13,22 @@ public class BooksMapper implements BaseMapper<Book, BookDto> {
 
     @Override
     public BookDto toDto(Book entity) {
-        if (entity == null) return null;
+        if (entity == null)
+            return null;
         return new BookDto(
-            entity.getId(),
-            entity.getTitle(),
-            entity.getAuthor(),
-            entity.getIsbn(),
-            entity.getPublishedYear(),
-            entity.getGenre(),
-            entity.getPrice()
-        );
+                entity.getId(),
+                entity.getTitle(),
+                entity.getAuthor(),
+                entity.getIsbn(),
+                entity.getPublishedYear(),
+                entity.getGenre(),
+                entity.getPrice());
     }
 
     @Override
     public Book toEntity(BookDto dto) {
-        if (dto == null) return null;
+        if (dto == null)
+            return null;
         Book book = new Book();
         book.setId(dto.getId());
         book.setTitle(dto.getTitle());
@@ -36,8 +37,6 @@ public class BooksMapper implements BaseMapper<Book, BookDto> {
         book.setPublishedYear(dto.getPublishedYear());
         book.setGenre(dto.getGenre());
         book.setPrice(dto.getPrice());
-        book.setUser(null); // BookDto does not have user info
         return book;
     }
-
 }

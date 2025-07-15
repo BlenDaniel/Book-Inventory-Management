@@ -2,9 +2,6 @@ package com.book.inventory.management.bookim.model;
 
 import jakarta.persistence.Column;
 import jakarta.persistence.Entity;
-import jakarta.persistence.FetchType;
-import jakarta.persistence.JoinColumn;
-import jakarta.persistence.OneToOne;
 import jakarta.persistence.Table;
 import lombok.AllArgsConstructor;
 import lombok.Getter;
@@ -18,10 +15,7 @@ import lombok.Setter;
 @Entity
 @Table(name = "books")
 public class Book extends BaseEntity {
-    @OneToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "user_id", nullable = false)
-    private User user;
-
+    
     @Column(nullable = false)
     private String title;
 
@@ -38,5 +32,4 @@ public class Book extends BaseEntity {
     private String genre;
 
     private double price;
-
 }
