@@ -50,6 +50,10 @@ public class BookController extends AbstractController {
     public ResponseEntity<ApiResponse<BookDto>> getOne(@PathVariable String id) {
         try {
             BookDto bookDto = bookService.getOne(id);
+            if (bookDto == null) {
+                log.error("Book not found with id: {}", id);
+                return error("Book not found", HttpStatus.NOT_FOUND);
+            }
             return ok(bookDto);
         } catch (Exception e) {
             log.error("Error getting book: {}", e.getMessage());
@@ -82,12 +86,16 @@ public class BookController extends AbstractController {
     }
 
     // Delete
-    @DeleteMapping
-    public ResponseEntity<ApiResponse<String>> delete(@RequestBody BookUpdateRequest request) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<String>> delete(@PathVariable String id) {
         try {
-            bookService.delete(request.getId());
+            bookService.delete(id);
             return ok("Book deleted successfully");
         } catch (Exception e) {
+            if (e.getMessage().contains("not found")) {
+                log.error("Book not found with id: {}", id);
+                return error("Book not found", HttpStatus.NOT_FOUND);
+            }
             log.error("Error deleting book: {}", e.getMessage());
             return error("Failed to delete book", HttpStatus.INTERNAL_SERVER_ERROR);
         }

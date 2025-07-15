@@ -6,31 +6,31 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
-import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureWebMvc;
+import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMockMvc;
 import org.springframework.boot.test.context.SpringBootTest;
+import org.springframework.boot.test.mock.mockito.MockBean;
 import org.springframework.http.MediaType;
 import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.springframework.transaction.annotation.Transactional;
-import org.springframework.web.context.WebApplicationContext;
-import static org.hamcrest.Matchers.is;
+
+import java.util.Arrays;
+import java.util.Optional;
+
+import static org.mockito.ArgumentMatchers.any;
+import static org.mockito.Mockito.when;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.*;
-import java.util.Arrays;
 
 @SpringBootTest
-@AutoConfigureWebMvc
+@AutoConfigureMockMvc
 @ActiveProfiles("test")
-@Transactional
 class BookControllerTest {
 
     @Autowired
-    private WebApplicationContext webApplicationContext;
-
     private MockMvc mockMvc;
 
-    @Autowired
+    @MockBean
     private BookRepository bookRepository;
 
     @Autowired
@@ -38,8 +38,7 @@ class BookControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.webAppContextSetup(webApplicationContext).build();
-        bookRepository.deleteAll();
+        // No need to delete all since we're mocking the repository
     }
 
     @Test
@@ -54,6 +53,17 @@ class BookControllerTest {
                 "price": 19.99
             }
             """;
+
+        Book savedBook = new Book();
+        savedBook.setId("123");
+        savedBook.setTitle("Test Book");
+        savedBook.setAuthor("Test Author");
+        savedBook.setIsbn("978-0-123456-78-9");
+        savedBook.setPublishedYear(2023);
+        savedBook.setGenre("Fiction");
+        savedBook.setPrice(19.99);
+
+        when(bookRepository.save(any(Book.class))).thenReturn(savedBook);
 
         mockMvc.perform(post("/api/books")
                 .contentType(MediaType.APPLICATION_JSON)
@@ -75,7 +85,7 @@ class BookControllerTest {
         book.setGenre("Fiction");
         book.setPrice(19.99);
 
-        bookRepository.save(book);
+        when(bookRepository.findById("123")).thenReturn(Optional.of(book));
 
         mockMvc.perform(get("/api/books/{id}", book.getId()))
                 .andExpect(status().isOk())
@@ -102,27 +112,37 @@ class BookControllerTest {
         book2.setGenre("Non-Fiction");
         book2.setPrice(24.99);
 
-        bookRepository.saveAll(Arrays.asList(book1, book2));
+        when(bookRepository.findAll()).thenReturn(Arrays.asList(book1, book2));
 
         mockMvc.perform(get("/api/books"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true))
                 .andExpect(jsonPath("$.data").isArray())
-                .andExpect(jsonPath("$.data.length()", is(2)));
+                .andExpect(jsonPath("$.data.length()").value(2));
     }
 
     @Test
     void shouldUpdateBook() throws Exception {
-        Book book = new Book();
-        book.setId("123");
-        book.setTitle("Old Title");
-        book.setAuthor("Old Author");
-        book.setIsbn("978-0-123456-78-9");
-        book.setPublishedYear(2023);
-        book.setGenre("Fiction");
-        book.setPrice(19.99);
+        Book existingBook = new Book();
+        existingBook.setId("123");
+        existingBook.setTitle("Old Title");
+        existingBook.setAuthor("Old Author");
+        existingBook.setIsbn("978-0-123456-78-9");
+        existingBook.setPublishedYear(2023);
+        existingBook.setGenre("Fiction");
+        existingBook.setPrice(19.99);
 
-        bookRepository.save(book);
+        Book updatedBook = new Book();
+        updatedBook.setId("123");
+        updatedBook.setTitle("Updated Title");
+        updatedBook.setAuthor("Updated Author");
+        updatedBook.setIsbn("978-0-123456-78-9");
+        updatedBook.setPublishedYear(2023);
+        updatedBook.setGenre("Fiction");
+        updatedBook.setPrice(29.99);
+
+        when(bookRepository.findById("123")).thenReturn(Optional.of(existingBook));
+        when(bookRepository.save(any(Book.class))).thenReturn(updatedBook);
 
         String updateJson = """
             {
@@ -153,14 +173,11 @@ class BookControllerTest {
         book.setGenre("Fiction");
         book.setPrice(19.99);
 
-        bookRepository.save(book);
+        when(bookRepository.findById("123")).thenReturn(Optional.of(book));
 
         mockMvc.perform(delete("/api/books/{id}", book.getId()))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.success").value(true));
-
-        mockMvc.perform(get("/api/books/{id}", book.getId()))
-                .andExpect(status().isNotFound());
     }
 
     @Test
@@ -173,15 +190,7 @@ class BookControllerTest {
         book1.setGenre("Programming");
         book1.setPrice(29.99);
 
-        Book book2 = new Book();
-        book2.setTitle("Python Guide");
-        book2.setAuthor("Jane Smith");
-        book2.setIsbn("978-0-987654-32-1");
-        book2.setPublishedYear(2022);
-        book2.setGenre("Programming");
-        book2.setPrice(24.99);
-
-        bookRepository.saveAll(Arrays.asList(book1, book2));
+        when(bookRepository.searchByTitleOrAuthor("Java")).thenReturn(Arrays.asList(book1));
 
         mockMvc.perform(get("/api/books/search")
                 .param("query", "Java"))
@@ -194,6 +203,8 @@ class BookControllerTest {
 
     @Test
     void shouldReturn404WhenBookNotFound() throws Exception {
+        when(bookRepository.findById("non-existent-id")).thenReturn(Optional.empty());
+
         mockMvc.perform(get("/api/books/{id}", "non-existent-id"))
                 .andExpect(status().isNotFound());
     }

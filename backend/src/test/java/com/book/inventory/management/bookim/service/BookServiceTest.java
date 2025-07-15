@@ -133,6 +133,7 @@ class BookServiceTest {
     void shouldUpdateBook() {
         // Given
         BookUpdateRequest request = new BookUpdateRequest();
+        request.setId("123");
         request.setTitle("Updated Title");
         request.setPrice(29.99);
 
@@ -166,11 +167,16 @@ class BookServiceTest {
 
     @Test
     void shouldDeleteBook() {
+        // Given
+        String bookId = "123";
+        when(bookRepository.existsById(bookId)).thenReturn(true);
+
         // When
-        bookService.delete("123");
+        bookService.delete(bookId);
 
         // Then
-        verify(bookRepository).deleteById("123");
+        verify(bookRepository).existsById(bookId);
+        verify(bookRepository).deleteById(bookId);
     }
 
     @Test
