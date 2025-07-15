@@ -22,7 +22,7 @@ export const addBook = async (book: BookFormData): Promise<Book> => {
 };
 
 export const updateBook = async (book: Book): Promise<Book> => {
-  const response = await axios.put<ApiResponse<Book>>(API_BASE_URL, book);
+  const response = await axios.put<ApiResponse<Book>>(`${API_BASE_URL}/${book.id}`, book);
   return response.data.data;
 };
 

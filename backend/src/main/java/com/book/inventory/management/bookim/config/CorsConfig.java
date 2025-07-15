@@ -14,11 +14,20 @@ public class CorsConfig {
         UrlBasedCorsConfigurationSource source = new UrlBasedCorsConfigurationSource();
         CorsConfiguration config = new CorsConfiguration();
 
-        // Allow requests from any origin
-        config.addAllowedOriginPattern("*");
+        // Allow requests from common development origins
+        config.addAllowedOrigin("http://localhost:3000");  // React default
+        config.addAllowedOrigin("http://localhost:5173");  // Vite default
+        config.addAllowedOrigin("http://127.0.0.1:3000");
+        config.addAllowedOrigin("http://127.0.0.1:5173");
 
         config.addAllowedHeader("*"); // Allow all headers
-        config.addAllowedMethod("GET"); // Allow only GET HTTP method
+        
+        // Allow all necessary HTTP methods
+        config.addAllowedMethod("GET");
+        config.addAllowedMethod("POST");
+        config.addAllowedMethod("PUT");
+        config.addAllowedMethod("DELETE");
+        config.addAllowedMethod("OPTIONS");
 
         source.registerCorsConfiguration("/**", config);
         return new CorsFilter(source);
