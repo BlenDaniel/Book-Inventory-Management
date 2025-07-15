@@ -1,1 +1,33 @@
-/* BookList.module.css */
+.container {
+  padding: 20px;
+}
+
+.table {
+  width: 100%;
+  border-collapse: collapse;
+  margin-top: 20px;
+}
+
+.table th,
+.table td {
+  border: 1px solid #ddd;
+  padding: 8px;
+  text-align: left;
+}
+
+.table th {
+  background-color: #f2f2f2;
+}
+
+.editButton {
+  background-color: #4caf50;
+  color: white;
+  border: none;
+  padding: 5px 10px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.editButton:hover {
+  background-color: #45a049;
+}
