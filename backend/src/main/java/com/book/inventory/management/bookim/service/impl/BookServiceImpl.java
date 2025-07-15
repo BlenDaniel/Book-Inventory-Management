@@ -5,6 +5,7 @@ import java.util.stream.Collectors;
 
 import org.springframework.stereotype.Service;
 
+import com.book.inventory.management.bookim.exception.BookNotFoundException;
 import com.book.inventory.management.bookim.mapper.BooksMapper;
 import com.book.inventory.management.bookim.model.Book;
 import com.book.inventory.management.bookim.model.dto.BookDto;
@@ -47,7 +48,7 @@ public class BookServiceImpl implements BookService {
         log.info("Fetching book with id: {}", id);
         
         Book book = bookRepository.findById(id)
-            .orElseThrow(() -> new RuntimeException("Book not found with id: " + id));
+            .orElseThrow(() -> new BookNotFoundException("Book not found"));
         
         return booksMapper.toDto(book);
     }
@@ -68,7 +69,7 @@ public class BookServiceImpl implements BookService {
         log.info("Updating book with id: {}", request.getId());
         
         Book existingBook = bookRepository.findById(request.getId())
-            .orElseThrow(() -> new RuntimeException("Book not found with id: " + request.getId()));
+            .orElseThrow(() -> new BookNotFoundException("Book not found with id: " + request.getId()));
         
         existingBook.setTitle(request.getTitle());
         existingBook.setAuthor(request.getAuthor());
@@ -88,7 +89,7 @@ public class BookServiceImpl implements BookService {
         log.info("Deleting book with id: {}", id);
         
         if (!bookRepository.existsById(id)) {
-            throw new RuntimeException("Book not found with id: " + id);
+            throw new BookNotFoundException("Book not found with id: " + id);
         }
         
         bookRepository.deleteById(id);

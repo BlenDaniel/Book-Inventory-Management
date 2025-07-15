@@ -19,6 +19,7 @@ import lombok.extern.slf4j.Slf4j;
 
 import org.springframework.web.bind.annotation.RestController;
 
+import com.book.inventory.management.bookim.exception.BookNotFoundException;
 import com.book.inventory.management.bookim.model.dto.BookDto;
 import com.book.inventory.management.bookim.model.request.BookCreateRequest;
 import com.book.inventory.management.bookim.model.request.BookUpdateRequest;
@@ -50,11 +51,10 @@ public class BookController extends AbstractController {
     public ResponseEntity<ApiResponse<BookDto>> getOne(@PathVariable String id) {
         try {
             BookDto bookDto = bookService.getOne(id);
-            if (bookDto == null) {
-                log.error("Book not found with id: {}", id);
-                return error("Book not found", HttpStatus.NOT_FOUND);
-            }
             return ok(bookDto);
+        } catch (BookNotFoundException e) {
+            log.error("Book not found: {}", e.getMessage());
+            return error("Book not found", HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             log.error("Error getting book: {}", e.getMessage());
             return error("Failed to get book", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -79,6 +79,9 @@ public class BookController extends AbstractController {
         try {
             BookDto bookDto = bookService.update(request);
             return ok(bookDto);
+        } catch (BookNotFoundException e) {
+            log.error("Book not found: {}", e.getMessage());
+            return error("Book not found", HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             log.error("Error updating book: {}", e.getMessage());
             return error("Failed to update book", HttpStatus.INTERNAL_SERVER_ERROR);
@@ -86,11 +89,14 @@ public class BookController extends AbstractController {
     }
 
     // Delete
-    @DeleteMapping
-    public ResponseEntity<ApiResponse<String>> delete(@RequestBody BookUpdateRequest request) {
+    @DeleteMapping("/{id}")
+    public ResponseEntity<ApiResponse<String>> delete(@PathVariable String id) {
         try {
-            bookService.delete(request.getId());
+            bookService.delete(id);
             return ok("Book deleted successfully");
+        } catch (BookNotFoundException e) {
+            log.error("Book not found: {}", e.getMessage());
+            return error("Book not found", HttpStatus.NOT_FOUND);
         } catch (Exception e) {
             log.error("Error deleting book: {}", e.getMessage());
             return error("Failed to delete book", HttpStatus.INTERNAL_SERVER_ERROR);
