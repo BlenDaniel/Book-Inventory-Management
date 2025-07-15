@@ -22,7 +22,17 @@ export const addBook = async (book: BookFormData): Promise<Book> => {
 };
 
 export const updateBook = async (book: Book): Promise<Book> => {
-  const response = await axios.put<ApiResponse<Book>>(`${API_BASE_URL}/${book.id}`, book);
+  // Create the update request with just the ID and data
+  const updateRequest = {
+    id: book.id,
+    title: book.title,
+    author: book.author,
+    isbn: book.isbn,
+    publishedYear: book.publishedYear,
+    genre: book.genre,
+    price: book.price
+  };
+  const response = await axios.put<ApiResponse<Book>>(API_BASE_URL, updateRequest);
   return response.data.data;
 };
 
