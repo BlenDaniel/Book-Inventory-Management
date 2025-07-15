@@ -24,6 +24,17 @@
   border-radius: 4px;
 }
 
+.errorInput {
+  border-color: #ff4444 !important;
+}
+
+.errorText {
+  color: #ff4444;
+  font-size: 0.8rem;
+  margin-top: 5px;
+  display: block;
+}
+
 .submitButton {
   background-color: #4caf50;
   color: white;
