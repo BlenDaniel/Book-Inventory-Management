@@ -4,6 +4,7 @@ import com.book.inventory.management.bookim.mapper.BooksMapper;
 import com.book.inventory.management.bookim.model.Book;
 import com.book.inventory.management.bookim.model.dto.BookDto;
 import com.book.inventory.management.bookim.model.request.BookCreateRequest;
+import com.book.inventory.management.bookim.model.request.BookUpdateRequest;
 import com.book.inventory.management.bookim.repository.BookRepository;
 import com.book.inventory.management.bookim.service.impl.BookServiceImpl;
 import org.junit.jupiter.api.BeforeEach;
@@ -48,90 +49,152 @@ class BookServiceTest {
         request.setPrice(19.99);
 
         Book savedBook = new Book();
-        savedBook.setId("test-id");
+        savedBook.setId("123");
         savedBook.setTitle("Test Book");
         savedBook.setAuthor("Test Author");
+        savedBook.setIsbn("978-0-123456-78-9");
+        savedBook.setPublishedYear(2023);
+        savedBook.setGenre("Fiction");
+        savedBook.setPrice(19.99);
 
         BookDto expectedDto = new BookDto();
-        expectedDto.setId("test-id");
+        expectedDto.setId("123");
         expectedDto.setTitle("Test Book");
         expectedDto.setAuthor("Test Author");
-
-        when(bookRepository.save(any(Book.class))).thenReturn(savedBook);
-        when(booksMapper.toDto(savedBook)).thenReturn(expectedDto);
+        expectedDto.setIsbn("978-0-123456-78-9");
+        expectedDto.setPublishedYear(2023);
+        expectedDto.setGenre("Fiction");
+        expectedDto.setPrice(19.99);
 
         // When
+        when(bookRepository.save(any(Book.class))).thenReturn(savedBook);
+        when(booksMapper.toDto(any(Book.class))).thenReturn(expectedDto);
         BookDto result = bookService.create(request);
 
         // Then
-        assertNotNull(result);
-        assertEquals("test-id", result.getId());
-        assertEquals("Test Book", result.getTitle());
-        assertEquals("Test Author", result.getAuthor());
         verify(bookRepository).save(any(Book.class));
-        verify(booksMapper).toDto(savedBook);
+        verify(booksMapper).toDto(any(Book.class));
+        assertEquals(expectedDto, result);
     }
 
     @Test
-    void shouldGetAllBooks() {
+    void shouldGetBookById() {
         // Given
-        Book book1 = new Book();
-        book1.setId("1");
-        book1.setTitle("Book 1");
-
-        Book book2 = new Book();
-        book2.setId("2");
-        book2.setTitle("Book 2");
-
-        List<Book> books = Arrays.asList(book1, book2);
-
-        BookDto dto1 = new BookDto();
-        dto1.setId("1");
-        dto1.setTitle("Book 1");
-
-        BookDto dto2 = new BookDto();
-        dto2.setId("2");
-        dto2.setTitle("Book 2");
-
-        when(bookRepository.findAll()).thenReturn(books);
-        when(booksMapper.toDto(book1)).thenReturn(dto1);
-        when(booksMapper.toDto(book2)).thenReturn(dto2);
-
-        // When
-        List<BookDto> result = bookService.getAll();
-
-        // Then
-        assertNotNull(result);
-        assertEquals(2, result.size());
-        assertEquals("Book 1", result.get(0).getTitle());
-        assertEquals("Book 2", result.get(1).getTitle());
-        verify(bookRepository).findAll();
-    }
-
-    @Test
-    void shouldGetOneBook() {
-        // Given
-        String bookId = "test-id";
         Book book = new Book();
-        book.setId(bookId);
+        book.setId("123");
         book.setTitle("Test Book");
 
         BookDto expectedDto = new BookDto();
-        expectedDto.setId(bookId);
+        expectedDto.setId("123");
         expectedDto.setTitle("Test Book");
 
-        when(bookRepository.findById(bookId)).thenReturn(Optional.of(book));
-        when(booksMapper.toDto(book)).thenReturn(expectedDto);
-
         // When
-        BookDto result = bookService.getOne(bookId);
+        when(bookRepository.findById("123")).thenReturn(Optional.of(book));
+        when(booksMapper.toDto(any(Book.class))).thenReturn(expectedDto);
+        BookDto result = bookService.getOne("123");
 
         // Then
-        assertNotNull(result);
-        assertEquals(bookId, result.getId());
-        assertEquals("Test Book", result.getTitle());
-        verify(bookRepository).findById(bookId);
-        verify(booksMapper).toDto(book);
+        verify(bookRepository).findById("123");
+        verify(booksMapper).toDto(any(Book.class));
+        assertEquals(expectedDto, result);
+    }
+
+    @Test
+    void shouldReturnAllBooks() {
+        // Given
+        Book book1 = new Book();
+        book1.setId("123");
+        book1.setTitle("Book 1");
+
+        Book book2 = new Book();
+        book2.setId("456");
+        book2.setTitle("Book 2");
+
+        BookDto dto1 = new BookDto();
+        dto1.setId("123");
+        dto1.setTitle("Book 1");
+
+        BookDto dto2 = new BookDto();
+        dto2.setId("456");
+        dto2.setTitle("Book 2");
+
+        // When
+        when(bookRepository.findAll()).thenReturn(Arrays.asList(book1, book2));
+        when(booksMapper.toDto(any(Book.class))).thenReturn(dto1, dto2);
+        List<BookDto> result = bookService.getAll();
+
+        // Then
+        verify(bookRepository).findAll();
+        verify(booksMapper, times(2)).toDto(any(Book.class));
+        assertEquals(Arrays.asList(dto1, dto2), result);
+    }
+
+    @Test
+    void shouldUpdateBook() {
+        // Given
+        BookUpdateRequest request = new BookUpdateRequest();
+        request.setTitle("Updated Title");
+        request.setPrice(29.99);
+
+        Book existingBook = new Book();
+        existingBook.setId("123");
+        existingBook.setTitle("Old Title");
+        existingBook.setPrice(19.99);
+
+        Book updatedBook = new Book();
+        updatedBook.setId("123");
+        updatedBook.setTitle("Updated Title");
+        updatedBook.setPrice(29.99);
+
+        BookDto expectedDto = new BookDto();
+        expectedDto.setId("123");
+        expectedDto.setTitle("Updated Title");
+        expectedDto.setPrice(29.99);
+
+        // When
+        when(bookRepository.findById("123")).thenReturn(Optional.of(existingBook));
+        when(bookRepository.save(any(Book.class))).thenReturn(updatedBook);
+        when(booksMapper.toDto(any(Book.class))).thenReturn(expectedDto);
+        BookDto result = bookService.update(request);
+
+        // Then
+        verify(bookRepository).findById("123");
+        verify(bookRepository).save(any(Book.class));
+        verify(booksMapper).toDto(any(Book.class));
+        assertEquals(expectedDto, result);
+    }
+
+    @Test
+    void shouldDeleteBook() {
+        // When
+        bookService.delete("123");
+
+        // Then
+        verify(bookRepository).deleteById("123");
+    }
+
+    @Test
+    void shouldSearchBooks() {
+        // Given
+        Book book1 = new Book();
+        book1.setId("123");
+        book1.setTitle("Test Book");
+        book1.setAuthor("Test Author");
+
+        BookDto dto1 = new BookDto();
+        dto1.setId("123");
+        dto1.setTitle("Test Book");
+        dto1.setAuthor("Test Author");
+
+        // When
+        when(bookRepository.searchByTitleOrAuthor("test")).thenReturn(Arrays.asList(book1));
+        when(booksMapper.toDto(any(Book.class))).thenReturn(dto1);
+        List<BookDto> result = bookService.search("test");
+
+        // Then
+        verify(bookRepository).searchByTitleOrAuthor("test");
+        verify(booksMapper).toDto(any(Book.class));
+        assertEquals(Arrays.asList(dto1), result);
     }
 
     @Test
