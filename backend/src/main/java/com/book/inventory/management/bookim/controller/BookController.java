@@ -86,16 +86,12 @@ public class BookController extends AbstractController {
     }
 
     // Delete
-    @DeleteMapping("/{id}")
-    public ResponseEntity<ApiResponse<String>> delete(@PathVariable String id) {
+    @DeleteMapping
+    public ResponseEntity<ApiResponse<String>> delete(@RequestBody BookUpdateRequest request) {
         try {
-            bookService.delete(id);
+            bookService.delete(request.getId());
             return ok("Book deleted successfully");
         } catch (Exception e) {
-            if (e.getMessage().contains("not found")) {
-                log.error("Book not found with id: {}", id);
-                return error("Book not found", HttpStatus.NOT_FOUND);
-            }
             log.error("Error deleting book: {}", e.getMessage());
             return error("Failed to delete book", HttpStatus.INTERNAL_SERVER_ERROR);
         }
