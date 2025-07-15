@@ -9,9 +9,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/books")
+@RequestMapping("/api/auth")
 @RequiredArgsConstructor
 @Slf4j
-public class BookController extends AbstractController {
+public class AuthController extends AbstractController {
 
 }
