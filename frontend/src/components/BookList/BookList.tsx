@@ -1,16 +1,20 @@
 import { useState } from "react";
 import { useNavigate } from "react-router-dom";
+import { useDispatch } from "react-redux";
 import { useBooks } from "../../hooks/useBooks";
-import { searchBooks } from "../../services/api";
+import { searchBooks, deleteBook as deleteBookApi } from "../../services/api";
+import { deleteBook } from "../../store/bookSlice";
 import { type Book } from "../../types/book";
 import styles from "./BookList.module.css";
 
 const BookList = () => {
   const { books, loading, error } = useBooks();
   const navigate = useNavigate();
+  const dispatch = useDispatch();
   const [searchTerm, setSearchTerm] = useState("");
   const [searchResults, setSearchResults] = useState<Book[] | null>(null);
   const [isSearching, setIsSearching] = useState(false);
+  const [isDeleting, setIsDeleting] = useState<string | null>(null);
 
   const handleSearch = async () => {
     if (!searchTerm.trim()) {
@@ -23,7 +27,7 @@ const BookList = () => {
       const results = await searchBooks(searchTerm);
       setSearchResults(results);
     } catch (error) {
-      console.error("Search failed:", error);
+      console.error("Error searching books:", error);
     } finally {
       setIsSearching(false);
     }
@@ -32,6 +36,21 @@ const BookList = () => {
   const clearSearch = () => {
     setSearchTerm("");
     setSearchResults(null);
+  };
+
+  const handleDelete = async (id: string) => {
+    if (window.confirm("Are you sure you want to delete this book?")) {
+      setIsDeleting(id);
+      try {
+        await deleteBookApi(id);
+        dispatch(deleteBook(id));
+      } catch (error) {
+        console.error("Error deleting book:", error);
+        alert("Failed to delete book. Please try again.");
+      } finally {
+        setIsDeleting(null);
+      }
+    }
   };
 
   const displayBooks = searchResults || books;
@@ -65,14 +84,14 @@ const BookList = () => {
             onClick={clearSearch}
             className={styles.clearButton}
           >
-            Clear
+            Clear Search
           </button>
         )}
       </div>
 
       {isShowingSearchResults && (
         <div className={styles.searchInfo}>
-          Found {displayBooks.length} book(s) matching "{searchTerm}"
+          Found {displayBooks.length} results for "{searchTerm}"
         </div>
       )}
 
@@ -89,32 +108,31 @@ const BookList = () => {
           </tr>
         </thead>
         <tbody>
-          {displayBooks.length === 0 ? (
-            <tr>
-              <td colSpan={7} className={styles.noResults}>
-                {isShowingSearchResults ? "No books found matching your search." : "No books available."}
+          {displayBooks.map((book) => (
+            <tr key={book.id}>
+              <td>{book.title}</td>
+              <td>{book.author}</td>
+              <td>{book.isbn}</td>
+              <td>{book.publishedYear}</td>
+              <td>{book.genre}</td>
+              <td>${book.price.toFixed(2)}</td>
+              <td>
+                <button
+                  onClick={() => navigate(`/edit/${book.id}`)}
+                  className={styles.editButton}
+                >
+                  Edit
+                </button>
+                <button
+                  onClick={() => handleDelete(book.id)}
+                  className={styles.deleteButton}
+                  disabled={isDeleting === book.id}
+                >
+                  {isDeleting === book.id ? "Deleting..." : "Delete"}
+                </button>
               </td>
             </tr>
-          ) : (
-            displayBooks.map((book) => (
-              <tr key={book.id}>
-                <td>{book.title}</td>
-                <td>{book.author}</td>
-                <td>{book.isbn}</td>
-                <td>{book.publishedYear}</td>
-                <td>{book.genre}</td>
-                <td>${book.price.toFixed(2)}</td>
-                <td>
-                  <button
-                    onClick={() => navigate(`/edit/${book.id}`)}
-                    className={styles.editButton}
-                  >
-                    Edit
-                  </button>
-                </td>
-              </tr>
-            ))
-          )}
+          ))}
         </tbody>
       </table>
     </div>

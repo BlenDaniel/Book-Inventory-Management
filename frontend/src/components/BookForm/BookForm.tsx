@@ -5,6 +5,7 @@ import { type AppDispatch, type RootState } from "../../store/store";
 import { type BookFormData } from "../../types/book";
 import { addBook, updateBook } from "../../store/bookSlice";
 import { validateBook } from "../../utils/validation";
+import * as api from "../../services/api";
 import styles from "./BookForm.module.css";
 
 const BookForm = () => {
@@ -22,8 +23,9 @@ const BookForm = () => {
     price: 0,
   });
 
-  const [errors, setErrors] = useState<Partial<Record<keyof BookFormData, string>>>({});
+  const [errors, setErrors] = useState<Partial<Record<keyof BookFormData | 'submit', string>>>({});
   const [touched, setTouched] = useState<Record<string, boolean>>({});
+  const [isSubmitting, setIsSubmitting] = useState(false);
 
   useEffect(() => {
     if (id) {
@@ -69,7 +71,7 @@ const BookForm = () => {
     }));
   };
 
-  const handleSubmit = (e: React.FormEvent) => {
+  const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
 
     // Validate all fields before submission
@@ -78,12 +80,25 @@ const BookForm = () => {
 
     // Check if there are any errors
     if (Object.keys(validationErrors).length === 0) {
-      if (id) {
-        dispatch(updateBook({ id: id, ...formData }));
-      } else {
-        dispatch(addBook({ ...formData, id: Date.now().toString() }));
+      setIsSubmitting(true);
+      try {
+        if (id) {
+          const updatedBook = await api.updateBook({ id, ...formData });
+          dispatch(updateBook(updatedBook));
+        } else {
+          const newBook = await api.addBook(formData);
+          dispatch(addBook(newBook));
+        }
+        navigate("/");
+      } catch (error) {
+        console.error("Error submitting book:", error);
+        setErrors((prev) => ({
+          ...prev,
+          submit: "Failed to submit book. Please try again.",
+        }));
+      } finally {
+        setIsSubmitting(false);
       }
-      navigate("/");
     }
   };
 
@@ -196,14 +211,23 @@ const BookForm = () => {
             className={getErrorClass("price")}
             min="0"
             step="0.01"
+            required
           />
           {touched.price && errors.price && (
             <span className={styles.errorText}>{errors.price}</span>
           )}
         </div>
 
-        <button type="submit" className={styles.submitButton}>
-          {id ? "Update Book" : "Add Book"}
+        {errors.submit && (
+          <div className={styles.errorText}>{errors.submit}</div>
+        )}
+
+        <button 
+          type="submit" 
+          className={styles.submitButton}
+          disabled={isSubmitting}
+        >
+          {isSubmitting ? "Submitting..." : id ? "Update Book" : "Add Book"}
         </button>
       </form>
     </div>
